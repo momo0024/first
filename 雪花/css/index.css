@@ -1,0 +1,36 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+body{
+		overflow: hidden;
+		background-image: url(../img/a1.jpg);
+		background-size: cover;
+}
+.box{
+	position: absolute;
+	top: 55px;
+	left: 50px;
+}
+.img{
+	position: absolute;
+	}
+.img img{
+	width: 450px;
+	border-radius: 10%;
+}
+.zi{
+	position: absolute;
+	color: deeppink;
+	top: 40px;
+	left: 550px;
+	font-size: 20px;
+	height: 300px;
+	overflow: hidden;
+	font-family: "仿宋";
+}
+.music{
+	position: fixed;
+	top: 330px;
+	left: 115px;
+}
