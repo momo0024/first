@@ -1,0 +1,142 @@
+ *{
+	margin: 0px;
+	padding: 0px;
+}
+body{
+	background-color: #faf8ef;
+}
+section{
+	width: 30%;
+	height: 700px;
+	
+	margin: 0 35% 0 35%;
+}
+/*头部DIV*/
+#headDiv{
+	width: 100%;
+	height: 170px;
+}
+/*2048*/
+#headDiv p{
+	width: 40%;
+	height: auto;
+	font-size: 70px;
+	color: #776e65;
+	font-weight: bold;
+	display: inline-block;
+}
+/*最好成绩*/
+#headDiv #bestDiv{
+	width: 135px;
+	height: 60px;
+	float: right;
+	background-color: #bbada0;
+	margin: 20px 0px 0px 0px;
+	text-align: center;
+	border-radius: 5px;
+}
+/*分数*/
+#headDiv #socreDiv{
+	width: 135px;
+	height: 60px;
+	float: right;
+	background-color: #bbada0;
+	margin: 20px 10px 0px 0px;
+	text-align: center;
+	border-radius: 5px;
+}
+/*新游戏按钮*/
+#headDiv button{
+	width: 120px;
+	height: 40px;
+	float: right;
+	margin: 15px 30px 0px 0px;
+	border-radius: 5px;
+	background-color: #8f7a66;
+	font-weight: bold;
+	border: none;
+	color: white;
+	font-size: 16px;
+}
+
+
+/*游戏*/
+#game{
+	width: 454px;
+	height: 460px;
+	background-color: #bbada0;
+	margin: 25px auto;
+	font-size: 0;
+	-webkit-text-size-adjust:none;
+}
+#game tr td{
+	width: 100px;
+	height: 100px;
+	background-color: #cdc1b4;
+	display:inline-block;
+	border-radius: 5px;
+	text-align: center;
+	line-height: 100px;	
+	vertical-align:middle;
+	font-size: 55px;
+	font-weight: bolder;
+	color: #776e65;
+}
+
+
+/*游戏结束*/
+#gameover{
+	width: 450px;
+	height: 200px;
+	position: absolute;
+	top: 38%;
+	left: 41%;
+	z-index: 99;
+	display: none;
+}
+#gameover p{
+	width: auto;
+	height: auto;
+	font-size: 60px;
+	color: #776e65;
+	font-weight: bold;
+}
+#gameover button{
+	width: 100px;
+	height: 40px;
+	margin: 24px 0px 0px 120px;
+	border-radius: 5px;
+	background-color: #8f7a66;
+	font-weight: bold;
+	border: none;
+	color: white;
+	font-size: 10px;
+}
+
+/*合并2048的提示*/
+#Winner{
+	width: 450px;
+	height: 200px;
+	position: absolute;
+	top: 38%;
+	left: 41%;
+	z-index: 99;
+	display: none;
+}
+#Winner p{
+	width: auto;
+	height: auto;
+	color: #776e65;
+	font-weight: bold;
+}
+#Winner button{
+	width: 110px;
+	height: 40px;
+	margin: 10px 0px 0px 120px;
+	border-radius: 5px;
+	background-color: #8f7a66;
+	font-weight: bold;
+	border: none;
+	color: white;
+	font-size: 10px;
+}

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>2048游戏</title>
+	<link rel="stylesheet" type="text/css" href="2048style.css">
+	<meta charset="utf-8">
+</head>
+<body>
+	<section>
+		<div id="headDiv">
+			<p>2048</p>
+			<div id="bestDiv">
+				<span style="color: #eee4da; font-size: 12px;" >BEST</span><br>
+				<span style="color: #ffffff;font-size: 30px;font-weight: bold;" id="BestScore">0</span>
+				<div></div>
+			</div>
+			<div id="socreDiv">
+				<span style="color: #eee4da; font-size: 12px;" >SCORE</span><br>
+				<span style="color: #ffffff;font-size: 30px;font-weight: bold;" id="Score">0</span>
+				<span id="AnimateScore" style="display: none;"></span>
+			</div>
+			<button id="NewGame">新游戏</button>
+		</div>
+
+		<div id="game">
+				<table>
+					<tr id="tr0">
+							<td class="list0"></td>
+							<td class="list1"></td>
+							<td class="list2"></td>
+							<td class="list3"></td>
+					</tr>	
+
+					<tr  id="tr1">	
+							<td class="list0"></td>
+							<td class="list1"></td>
+							<td class="list2"></td>
+							<td class="list3"></td>
+					</tr>	
+
+					<tr  id="tr2">	
+							<td class="list0"></td>
+							<td class="list1"></td>
+							<td class="list2"></td>
+							<td class="list3"></td>
+					</tr>	
+
+					<tr  id="tr3">	
+							<td class="list0"></td>
+							<td class="list1"></td>
+							<td class="list2"></td>
+							<td class="list3"></td>
+					</tr>
+				</table>
+			
+		</div>
+
+		<!-- 游戏失败提示-->
+		<div id="gameover">
+			<p>Game Over!</p>
+			<button>再试试！</button>
+		</div>
+		
+		<!-- 合并2048的提示-->
+		<div id="Winner">
+			<p style="font-size:12px ;margin: 0 0 0 17px">开发者已恭候多时:</p>
+			<p style="font-size:52px;margin: 0 0 0 17px;">您已赢得游戏!</p>
+			<button>继续...</button>
+		</div>
+
+		<p style="margin: 5px 55px;font-size: 18px;"><b>怎么玩</b>：使用<b>箭头键</b>移动方块。当两个具有相同编号的图块接触时，它们<b>合并为一个！</b></p>
+	</section>
+
+
+	<script type="text/javascript" src="jquery-3.3.1.js"></script>
+	<script type="text/javascript" src="jquery.color.js"></script>
+	
+	<script type="text/javascript">
+	//在页面加载完毕后获取页面最高分cookie
+	//如果cookie存在则展示最高分
+	//如果不存在则最高分为0
+	window.onload = function(){
+		setCookie();
+
+		var BestScore = getCookie("BestScore");
+		if(BestScore!= 0){
+				$('#BestScore').html(BestScore);
+			}else{
+				$('#BestScore').html('0');
+			} 
+
+
+
+		}
+
+		//获取cookie的值开始
+		function getCookie(cname)
+		{
+		  var name = cname + "=";
+		  var ca = document.cookie.split(';');
+		  for(var i=0; i<ca.length; i++) 
+		  {
+		    var c = ca[i].trim();
+		    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+		  }
+		  return 0;
+		}
+		//获取cookie的值结束
+
+		//设置cookie开始
+			function setCookie(cname,cvalue,exdays){
+				var d = new Date();
+				d.setTime(d.getTime()+(exdays*24*60*60*1000));
+				var expires = "expires="+d.toGMTString();
+				document.cookie = cname+"="+cvalue+"; "+expires;
+			}
+		//设置cookie结束
+
+		$(function(){
+			// 实现游戏界面css样式调节开始
+				for(i = 0; i <= 15; i++){
+					if(i == 0 || i == 4 || i == 8 || i == 12){
+						$("td:eq("+i+")").css('margin','10px 10px 0px 10px');
+						// console.log($("#game span:eq("+i+")").index());
+					}
+					else	
+					{
+						$("td:eq("+i+")").css('margin','10px 10px 0px 0px');
+						// console.log($("#game span:eq("+i+")").index());
+					}
+				}
+			// 实现游戏界面css样式调节结束
+
+			// 单击NewGame开始执行
+				$('#NewGame').click(function(){
+					var NumRandom = FunNumRandom(101);//生成随机函数 决定单击NewGame之后 22 24 出现的概率
+					var SpanRandom1 = FunNumRandom(16);
+					var SpanRandom2 = FunNumRandom(16);
+					//将分数Score设为0
+					$('#Score').html('0');
+					if (SpanRandom1 !== SpanRandom2) {
+						if (NumRandom<= 60) {
+							$("td").html('');
+							$("td:eq("+SpanRandom1+")").html('2');
+							$("td:eq("+SpanRandom2+")").html('2');
+						}else{
+							$("td").html('');
+							$("td:eq("+SpanRandom1+")").html('4');
+							$("td:eq("+SpanRandom2+")").html('2');
+						}
+					}else{
+						document.getElementById("NewGame").click();
+					}
+					$("#td").animate({backgroundColor:"#cdc1b4"},1);
+					ChangeSpanCSS();
+				})
+				$('#NewGame').click();
+			// 单击NewGame执行结束
+
+			//单击再试试按钮执行开始
+				$('#gameover button').click(function(){
+					$('#NewGame').click();
+					$('#gameover').fadeOut(1000);
+					$('#game').css('opacity','');
+				})
+			//单击再试试按钮执行结束
+			
+
+			// 单击继续按钮执行开始
+				$('#Winner button').click(function(){
+					$('#Winner').fadeOut(1000);
+					$('#game').css('opacity','');
+				})
+			// 单击继续按钮执行结束
+		})
+				
+		//获取span的所有值 并且根据值改变span的样式 开始
+				function ChangeSpanCSS(speed = 100){
+					for (var i = 0; i <= 15; i++) {
+						var SpanText = $("td:eq("+i+")").text();
+						var SpanIndex = "td:eq("+i+")";
+						switch(SpanText){
+							case '':
+							$(SpanIndex).animate({backgroundColor:"#cdc1b4"},speed);
+							continue;
+
+							case '2':
+							$(SpanIndex).animate({backgroundColor:"#eee4da"},speed);
+							continue;
+
+							case '4':
+							$(SpanIndex).animate({backgroundColor:"#ede0c8"},speed);
+							continue;
+
+							case '8':
+							$(SpanIndex).animate({backgroundColor:"#f2b179"},speed);
+							continue;
+
+							// case '16':
+							// $(SpanIndex).animate({backgroundColor:"#f59563"},speed).css('font-size','50px');
+							// continue;
+
+							case '32':
+							$(SpanIndex).animate({backgroundColor:"#f67c5f"},speed).css('font-size','50px');
+							continue;
+
+							case '64':
+							$(SpanIndex).animate({backgroundColor:"#f65e3b"},speed).css('font-size','50px');
+							continue;
+
+							case '128':
+							$(SpanIndex).animate({backgroundColor:"#edcf72"},speed).css('font-size','45px');
+
+							case '256':
+							$(SpanIndex).animate({backgroundColor:"#edcc61"},speed).css('font-size','45px');
+							continue;
+
+							case '512':
+							$(SpanIndex).animate({backgroundColor:"#edc850"},speed).css('font-size','45px');
+							continue;
+
+							case '1024':
+							$(SpanIndex).animate({backgroundColor:"#edc53f"},speed).css('font-size','40px');
+							continue;
+
+							case '16':
+							$(SpanIndex).animate({backgroundColor:"red"},speed).css('font-size','40px');
+								
+							if(sss<1){
+								
+								++sss;
+								
+								$('#game').css({'backgroundColor':'rgb(187,173,160)','opacity':'0.5'});
+								$('#Winner').fadeIn(1000);
+							}
+							
+							
+							continue;
+							
+						}
+					}
+					
+				}
+		//获取span的所有值 并且根据值改变span的样式 结束
+
+		//获取一个0-a值之间的随机数 开始
+			function FunNumRandom(a){
+				return Math.floor(Math.random()*a);
+			}
+		//获取一个0-a值之间的随机数 结束
+
+		// 通过CountEmptySpan()获取span空标签 1.如果空标签为0 游戏结束 2.在空标签中随机生成2或4  开始
+			function CheckNullSpan(){
+				var RemoveEmptySpan = CountEmptySpan();
+				if (RemoveEmptySpan.length == 0) {
+					$('#game').css({'backgroundColor':'rgb(187,173,160)','opacity':'0.2'});
+					$('#gameover').fadeIn(1000);
+				}else{
+					var SpanRandom = FunNumRandom(RemoveEmptySpan.length);
+					var NumRandom = FunNumRandom(101);
+						if (NumRandom<= 70) {
+							$("td:eq("+RemoveEmptySpan[SpanRandom]+")").html('2');
+						}else{
+							$("td:eq("+RemoveEmptySpan[SpanRandom]+")").html('4');
+						}
+					ChangeSpanCSS(80);
+				}
+			}
+		// 通过CountEmptySpan()获取span空标签 1.如果空标签为0 游戏结束 2.在空标签中随机生成2或4  开始
+
+		//获取span标签的空值的个数  开始
+			function CountEmptySpan(){
+				var NullSpan = new Array();
+				var Spans = document.getElementsByTagName("td");
+					for (var i = 0; i < Spans.length; i++) {
+						var SpanText = $("td:eq("+i+")").html();
+						if (SpanText == '') {
+							NullSpan[i] = i;
+						}
+					}
+				return RemoveEmptySpan = $.grep(NullSpan, function(n) {return $.trim(n).length > 0;});
+			}
+		//获取span标签的空值的个数  结束
+
+		// 实现键盘监听事件 开始
+		var sss=0;
+			$(document).keydown(function(a){
+				switch(a.keyCode){
+					case 37:
+						ToLeft();
+						ChangeSpanCSS(100);
+						CountScore(LeftScore);
+						setTimeout(CheckNullSpan,150);
+					break;
+
+					case 38:
+					// console.log("上键");
+						ToUp();
+						ChangeSpanCSS(100);
+						CountScore(UpScore);
+						setTimeout(CheckNullSpan,150);
+					break;
+
+					case 39:
+					// console.log("右键");
+						ToRight();
+						ChangeSpanCSS(100);
+						CountScore(RightScore);
+						setTimeout(CheckNullSpan,150);
+					break;
+
+					case 40:
+						ToDown();
+						ChangeSpanCSS(100);
+						CountScore(DownScore);
+						setTimeout(CheckNullSpan,150);
+					break;
+					}
+　　			})
+		// 实现键盘监听事件 结束
+		var BestScore = 0;
+		// 按下左键执行开始
+			function ToLeft(){
+				 var SpanText = new Array();
+				 // 获取所有span元素 生成数组 并分解为四个小数组
+				 // SpanText = getTdHtml();
+				 // for (var i = 0; i < 16; i++) {
+				 // 	SpanText[i] = $("td:eq("+i+")").html();
+				 // }
+				 // 对获取过来的Hang 0 1 2 3 四个数组先分割再进行排序
+				 // 值不为空的元素在前  为空的元素在后
+				 var Hang0 = getTdHtml(0,4,1);
+				 var Hang1 = getTdHtml(4,8,1);
+				 var Hang2 = getTdHtml(8,12,1);
+				 var Hang3 = getTdHtml(12,16,1);
+				 LeftScore = 0;
+				 // console.log(Hang0);
+				 for (var i = 0; i < 4; i++) {
+				 	// console.log(Hang0);
+				 		$("#tr0 td:eq("+i+")").html(Hang0[i]);
+				 		var TdVal = $("#tr0 td:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {				 
+				 				var k = $("#tr0 td:eq("+i+")").prev().html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr0 td:eq("+i+")").prev().html(sum);
+				 					$("#tr0 td:eq("+i+")").html("");
+				 					LeftScore+=sum;
+					 			}
+				 			}
+				 			// console.log(i);
+				 }
+				 var Hang0 = getTdHtml(0,4,1);
+				 	for (var a = 0; a < Hang0.length; a++) {
+				 		$("#tr0 td:eq("+a+")").html(Hang0[a]);
+				 	}
+
+				 for (var i = 0; i < Hang1.length; i++) {
+				 		$("#tr1 td:eq("+i+")").html(Hang1[i]);
+				 		var TdVal = $("#tr1 td:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {				 
+				 				var k = $("#tr1 td:eq("+i+")").prev().html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr1 td:eq("+i+")").prev().html(sum);
+				 					LeftScore+=sum;
+				 					$("#tr1 td:eq("+i+")").html("");
+				 					
+					 			}
+				 			}
+				 }
+				 var Hang1 = getTdHtml(4,8,1);
+				 	for (var k = 0; k < Hang1.length; k++) {
+				 		$("#tr1 td:eq("+k+")").html(Hang1[k]);
+				 	}
+
+				 for (var i = 0; i < Hang2.length; i++) {
+				 		$("#tr2 td:eq("+i+")").html(Hang2[i]);
+				 		var TdVal = $("#tr2 td:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {				 
+				 				var k = $("#tr2 td:eq("+i+")").prev().html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr2 td:eq("+i+")").prev().html(sum);
+				 					LeftScore+=sum;
+				 					$("#tr2 td:eq("+i+")").html("");
+				 					
+					 			}
+				 			}
+				 }
+
+				 var Hang2 = getTdHtml(8,12,1);
+				 	for (var k = 0; k < Hang2.length; k++) {
+				 		$("#tr2 td:eq("+k+")").html(Hang2[k]);
+				 	}	
+
+				 for (var i = 0; i < Hang3.length; i++) {
+				 		$("#tr3 td:eq("+i+")").html(Hang3[i]);
+				 		var TdVal = $("#tr3 td:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {				 
+				 				var k = $("#tr3 td:eq("+i+")").prev().html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr3 td:eq("+i+")").prev().html(sum);
+				 					LeftScore+=sum;
+				 					$("#tr3 td:eq("+i+")").html("");	
+					 			}
+				 			}
+				 }	
+				 var Hang3 = getTdHtml(12,16,1);
+				 	for (var k = 0; k < Hang3.length; k++) {
+				 		$("#tr3 td:eq("+k+")").html(Hang3[k]);
+				 	}
+			}
+		// 按下左键执行结束
+
+		//按下右键执行 开始
+			function ToRight(){
+				 var SpanText = new Array();
+				 // 获取所有span元素 生成数组 并分解为四个小数组
+				 // SpanText = getTdHtml();
+				 // for (var i = 0; i < 16; i++) {
+				 // 	SpanText[i] = $("td:eq("+i+")").html();
+				 // }
+				 // 对获取过来的Hang 0 1 2 3 四个数组先分割再进行排序
+				 // 值不为空的元素在前  为空的元素在后
+				 var Hang0 = getTdHtml(0,4,0);
+				 var Hang1 = getTdHtml(4,8,0);
+				 var Hang2 = getTdHtml(8,12,0);
+				 var Hang3 = getTdHtml(12,16,0);
+				 RightScore = 0
+				 // console.log(Hang0);
+				 for (var i = 3; i >= 0; i--) {
+				 		$("#tr0 td:eq("+i+")").html(Hang0[i]);
+				 		var TdVal = $("#tr0 td:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {				 
+				 				var k = $("#tr0 td:eq("+i+")").next().html();//获得i的下一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr0 td:eq("+i+")").next().html(sum);
+				 					$("#tr0 td:eq("+i+")").html("");
+				 					RightScore+=sum;
+				 					 
+					 			}
+				 			}
+				 }
+
+				 var Hang0 = getTdHtml(0,4,0);
+				 	for (var k = 3; k >= 0; k--) {
+				 		$("#tr0 td:eq("+k+")").html(Hang0[k]);
+				 	}
+
+				  for (var i = 3; i >= 0; i--) {
+				 		$("#tr1 td:eq("+i+")").html(Hang1[i]);
+				 		var TdVal = $("#tr1 td:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {				 
+				 				var k = $("#tr1 td:eq("+i+")").next().html();//获得i的下一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr1 td:eq("+i+")").next().html(sum);
+				 					$("#tr1 td:eq("+i+")").html("");
+				 					RightScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				 var Hang1 = getTdHtml(4,8,0);
+				 	for (var k = 3; k >= 0; k--) {
+				 		$("#tr1 td:eq("+k+")").html(Hang1[k]);
+				 	}
+
+				  for (var i = 3; i >= 0; i--) {
+				 		$("#tr2 td:eq("+i+")").html(Hang2[i]);
+				 		var TdVal = $("#tr2 td:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {				 
+				 				var k = $("#tr2 td:eq("+i+")").next().html();//获得i的下一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr2 td:eq("+i+")").next().html(sum);
+				 					$("#tr2 td:eq("+i+")").html("");
+				 					RightScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				 var Hang2 = getTdHtml(8,12,0);
+				 	for (var k = 3; k >= 0; k--) {
+				 			$("#tr2 td:eq("+k+")").html(Hang2[k]);
+				 		}
+
+				  for (var i = 3; i >= 0; i--) {
+				 		$("#tr3 td:eq("+i+")").html(Hang3[i]);
+				 		var TdVal = $("#tr3 td:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {				 
+				 				var k = $("#tr3 td:eq("+i+")").next().html();//获得i的下一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$("#tr3 td:eq("+i+")").next().html(sum);
+				 					$("#tr3 td:eq("+i+")").html("");
+				 					RightScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				 var Hang3 = getTdHtml(12,16,0);
+				 	for (var k = 3; k >= 0; k--) {
+				 			$("#tr3 td:eq("+k+")").html(Hang3[k]);
+				 		}
+	
+			}
+		//按下右键执行 结束
+
+		//按下上键执行开始
+			function ToUp(){
+			//根据class名获取数组 共四个
+				var List0 = $(".list0");
+				var List1 = $(".list1");
+				var List2 = $(".list2");
+				var List3 = $(".list3");
+				var ListZreo = new Array();
+				var ListOne = new Array();
+				var ListTwo = new Array();
+				var ListThree = new Array();
+			//通过遍历得到td的所有值
+				for (var i = 0; i < List0.length; i++) {
+				 	ListZreo[i] = List0[i].innerText;
+				}
+				for (var i = 0; i < List1.length; i++) {
+				 	ListOne[i] = List1[i].innerText;
+				}
+				 for (var i = 0; i < List2.length; i++) {
+				 	ListTwo[i] = List2[i].innerText;
+				 }
+				 for (var i = 0; i < List3.length; i++) {
+				 	ListThree[i] = List3[i].innerText;
+				 }
+			//把空格拍在后  数字排在前
+				 var list0 = getTdHtml(0,4,1,ListZreo);
+				 var list1 = getTdHtml(4,8,1,ListOne);
+				 var list2 = getTdHtml(8,12,1,ListTwo);
+				 var list3 = getTdHtml(12,16,1,ListThree);
+				 UpScore = 0;
+				 // console.log(list0);
+				 for (var i = 0; i < list0.length; i++) {
+				 		$(".list0:eq("+i+")").html(list0[i]);
+				 		var TdVal = $(".list0:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {
+				 				var a = i-1;//定义i上一个兄弟参数		 
+				 				var k = $(".list0:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list0:eq("+a+")").html(sum);
+				 					$(".list0:eq("+i+")").html("");
+				 					UpScore += sum; 
+				 					
+					 			}
+				 			}
+				 }
+				 var List0 = $(".list0");
+				 	for (var k = 0; k < List0.length; k++) {
+				 		ListZreo[k] = List0[k].innerText;
+					}
+				var list0 = getTdHtml(0,4,1,ListZreo);
+					for (var j = 0; j < list0.length; j++) {
+						$(".list0:eq("+j+")").html(list0[j]);
+					}
+
+
+				 for (var i = 0; i < list1.length; i++) {
+				 		$(".list1:eq("+i+")").html(list1[i]);
+				 		var TdVal = $(".list1:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {
+				 				var a = i-1;//定义i上一个兄弟参数		 
+				 				var k = $(".list1:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list1:eq("+a+")").html(sum);
+				 					$(".list1:eq("+i+")").html("");
+				 					UpScore += sum; 
+				 					
+					 			}
+				 			}
+				 }
+				 var list1 = $(".list1");
+				 	for (var k = 0; k < list1.length; k++) {
+				 		ListOne[k] = list1[k].innerText;
+					}
+				var list1 = getTdHtml(0,4,1,ListOne);
+					for (var j = 0; j < list1.length; j++) {
+						$(".list1:eq("+j+")").html(list1[j]);
+					}
+
+				 for (var i = 0; i < list2.length; i++) {
+				 		$(".list2:eq("+i+")").html(list2[i]);
+				 		var TdVal = $(".list2:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {
+				 				var a = i-1;//定义i上一个兄弟参数		 
+				 				var k = $(".list2:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list2:eq("+a+")").html(sum);
+				 					$(".list2:eq("+i+")").html("");
+				 					UpScore += sum; 
+				 					
+					 			}
+				 			}
+				 }
+				 var list2 = $(".list2");
+				 	for (var k = 0; k < list2.length; k++) {
+				 		ListTwo[k] = list2[k].innerText;
+					}
+				var list2 = getTdHtml(0,4,1,ListTwo);
+					for (var j = 0; j < list2.length; j++) {
+						$(".list2:eq("+j+")").html(list2[j]);
+					}
+
+				 for (var i = 0; i < list3.length; i++) {
+				 		$(".list3:eq("+i+")").html(list3[i]);
+				 		var TdVal = $(".list3:eq("+i+")").html();
+				 			if (i > 0 && TdVal !== "") {
+				 				var a = i-1;//定义i上一个兄弟参数		 
+				 				var k = $(".list3:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list3:eq("+a+")").html(sum);
+				 					$(".list3:eq("+i+")").html("");
+				 					UpScore += sum; 
+				 					
+					 			}
+				 			}
+				 }
+				var list3 = $(".list3");
+				 	for (var k = 0; k < list3.length; k++) {
+				 		ListThree[k] = list3[k].innerText;
+					}
+				var list3 = getTdHtml(0,4,1,ListThree);
+					for (var j = 0; j < list3.length; j++) {
+						$(".list3:eq("+j+")").html(list3[j]);
+					}
+			}
+		//按下上键执行开始
+		
+		//按下下键执行开始
+			function ToDown(){
+			//根据class名获取数组 共四个
+				var List0 = $(".list0");
+				var List1 = $(".list1");
+				var List2 = $(".list2");
+				var List3 = $(".list3");
+				var ListZreo = new Array();
+				var ListOne = new Array();
+				var ListTwo = new Array();
+				var ListThree = new Array();
+			//通过遍历得到td的所有值
+				for (var i = 0; i < List0.length; i++) {
+				 	ListZreo[i] = List0[i].innerText;
+				}
+				for (var i = 0; i < List1.length; i++) {
+				 	ListOne[i] = List1[i].innerText;
+				}
+				 for (var i = 0; i < List2.length; i++) {
+				 	ListTwo[i] = List2[i].innerText;
+				 }
+				 for (var i = 0; i < List3.length; i++) {
+				 	ListThree[i] = List3[i].innerText;
+				 }
+			//把空格拍在后  数字排在前
+				 var list0 = getTdHtml(0,4,0,ListZreo);
+				 var list1 = getTdHtml(4,8,0,ListOne);
+				 var list2 = getTdHtml(8,12,0,ListTwo);
+				 var list3 = getTdHtml(12,16,0,ListThree);
+				 DownScore = 0;
+				 // console.log(list0);
+				 for (var i = 3; i >= 0; i--) {
+				 		$(".list0:eq("+i+")").html(list0[i]);
+				 		var TdVal = $(".list0:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {
+				 				var a = i+1;//定义i上一个兄弟参数		 
+				 				var k = $(".list0:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list0:eq("+a+")").html(sum);
+				 					$(".list0:eq("+i+")").html("");
+				 					DownScore+=sum;
+					 			}
+				 			}
+				 }
+				 List0 = $(".list0");
+				 	for (var k = 0; k < List0.length; k++) {
+				 		ListZreo[k] = List0[k].innerText;
+					}
+				var List0 = getTdHtml(0,4,0,ListZreo);
+					for (var j = 3; j >= 0; j--) {
+						$(".list0:eq("+j+")").text(List0[j]);
+					}
+
+				for (var i = 3; i >= 0; i--) {
+				 		$(".list1:eq("+i+")").html(list1[i]);
+				 		var TdVal = $(".list1:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {
+				 				var a = i+1;//定义i上一个兄弟参数		 
+				 				var k = $(".list1:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list1:eq("+a+")").html(sum);
+				 					$(".list1:eq("+i+")").html("");
+				 					DownScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				List1 = $(".list1");
+				 	for (var k = 0; k < List1.length; k++) {
+				 		ListOne[k] = List1[k].innerText;
+					}
+				var List1 = getTdHtml(0,4,0,ListOne);
+					for (var j = 3; j >= 0; j--) {
+						$(".list1:eq("+j+")").html(List1[j]);
+					}
+
+				 for (var i = 3; i >= 0; i--) {
+				 		$(".list2:eq("+i+")").html(list2[i]);
+				 		var TdVal = $(".list2:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {
+				 				var a = i+1;//定义i上一个兄弟参数		 
+				 				var k = $(".list2:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list2:eq("+a+")").html(sum);
+				 					$(".list2:eq("+i+")").html("");
+				 					DownScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				List2 = $(".list2");
+				 	for (var k = 0; k < List2.length; k++) {
+				 		ListTwo[k] = List2[k].innerText;
+					}
+				var List2 = getTdHtml(0,4,0,ListTwo);
+					for (var j = 3; j >= 0; j--) {
+						$(".list2:eq("+j+")").html(List2[j]);
+					}
+
+				 for (var i = 3; i >= 0; i--) {
+				 		$(".list3:eq("+i+")").html(list3[i]);
+				 		var TdVal = $(".list3:eq("+i+")").html();
+				 			if (i < 3 && TdVal !== "") {
+				 				var a = i+1;//定义i上一个兄弟参数		 
+				 				var k = $(".list3:eq("+a+")").html();//获得i的上一个兄弟  赋值给k
+				 				if (TdVal == k) {//判断k的值和i的值一样不  一样相加
+				 					var sum = Number(TdVal)+ Number(k);
+				 					$(".list3:eq("+a+")").html(sum);
+				 					$(".list3:eq("+i+")").html("");
+				 					DownScore+=sum;
+				 					
+					 			}
+				 			}
+				 }
+				 List3 = $(".list3");
+				 	for (var k = 0; k < List3.length; k++) {
+				 		ListThree[k] = List3[k].innerText;
+					}
+				var List3 = getTdHtml(0,4,0,ListThree);
+					for (var j = 3; j >= 0; j--) {
+						$(".list3:eq("+j+")").html(List3[j]);
+					}
+			}
+		//按下下键执行结束
+
+		//获取td所有的值 返回一个长度为16的数组 开始
+			function getTdHtml(start,end,direction,arr = 0){
+				if (arr == 0) {
+				var SpanText = new Array();
+					for (var i = 0; i < 16; i++) {
+					 	SpanText[i] = $("td:eq("+i+")").html();
+					 }
+				 return CheckNumArr(SpanText.slice(start,end),direction);
+				}else{
+					 return CheckNumArr(arr,direction);
+				}
+				
+			}
+		//获取td所有的值 返回一个长度为16的数组 结束
+
+		// 根据direction的值判断是哪个方向键 
+		// 1为上和左键
+		// 非1为下和右键
+		// 获取对数组进行遍历开始
+			function CheckNumArr(arr,direction){
+				if(direction == 1){
+					var arr = arr.filter(d=>d);
+					num = arr.length;
+						switch(num){
+							case 0:
+							arr.push("","","","");
+							break;
+							case 1:
+							arr.push("","","");
+							break;
+							case 2:
+							arr.push("","");
+							break;
+							case 3:
+							arr.push("");
+							break;
+						}
+					return arr;
+				}else{
+					var arr = arr.filter(d=>d);
+					num = arr.length;
+						switch(num){
+							case 0:
+							arr.unshift("","","","");
+							break;
+							case 1:
+							arr.unshift("","","");
+							break;
+							case 2:
+							arr.unshift("","");
+							break;
+							case 3:
+							arr.unshift("");
+							break;
+						}
+					return arr;
+				}
+				
+			}
+		// 对按左键获取对数组进行遍历结束
+		
+		//按下按键后  统计分数开始 
+			function CountScore(DirectionScore){
+				//定义一个可克隆的NewSpan
+				var NewSpan = $('<span></span>').css({'color':'#776e65',
+													'font-size': '24px',
+													'font-weight': 'bold',
+													'position': 'absolute',
+													'width': '100px',
+													'height': '70px',
+													'top':'52px',
+													'right': '775px'}).html("+"+DirectionScore);
+
+				//获取页面分数值并加上每次按键得分  随后赋值给分数span
+				var Score = $('#Score').html( Number($('#Score').html()) + DirectionScore);
+				if (DirectionScore != 0) {
+					NewSpan.clone().appendTo($('#bestDiv')).css('display','block').animate({
+						top:'-30px',
+						opacity:'0.2'
+					},1200);
+				}
+
+				//获取BestScore存入cookie的值
+				var CKBestScore = Number(getCookie('BestScore'));
+				//获取分数Score的值 进行判断
+				var SumScore = Number($('#Score').html());
+				if (SumScore > CKBestScore) {
+					setCookie("BestScore",SumScore,30);
+					$('#BestScore').html(SumScore);
+				}
+			}
+		//按下按键后  统计分数结束 
+		
+	</script>
+</body>
+</html>
