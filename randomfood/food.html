@@ -1,0 +1,355 @@
+<html>
+ <head>
+  <title>点餐系统 V1.0</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <script>
+	var dishRate=[0.4,0.5,0.1]; // meat,vege,cold
+	var leastAveragePayed = 10; // Average consumption money
+	var defaultAveragePayed = 20; // default consumption money	
+	var eatRiceFlag = false; // if eat rice or other things
+	var eatRiceRate = 8; // the rate people eat rice;
+	var eachRicePayed = 3; // each rice cost how much
+	var moneyLimit = true;
+	var outRangeMoney = 5; // can over money
+		
+	// check
+	function checkCondition(tempPeoples,tempSumMoney){		
+		// if(tempPeoples<2){
+		// 	//alert();
+		// 	resultMes.innerText = "一个人下馆子?太奢侈了.";
+		// 	return false;
+		// }
+		if(tempPeoples>25){
+			//alert();
+			resultMes.innerText = "人数太多,一桌坐不下!";
+			return false;
+		}
+
+		if(tempSumMoney<tempPeoples*leastAveragePayed){
+			//alert();
+			resultMes.innerText ="太抠了吧,都不到人均消费10块!";
+			return false;
+		}
+		return true;
+	}
+	// get meat,vege,cold numArray
+	function getDishNumArray(tempPeoples){
+		var numArray=[Math.ceil(tempPeoples*dishRate[0]),getRandomRate(8)?Math.ceil(tempPeoples*dishRate[1]):Math.floor(tempPeoples*dishRate[1]),Math.round(tempPeoples*dishRate[2])]; // meat,vege,cold	
+		
+		if(getSumArray(numArray)<=tempPeoples+1 || tempPeoples>=10){
+			var soupNum = Math.floor(tempPeoples/4)
+			numArray[numArray.length]=soupNum>2?2:soupNum; // add soup,soup num small then 2
+		}
+
+		eatRiceFlag = getRandomRate(eatRiceRate);
+		if(!eatRiceFlag){
+			// eat others
+			var mainRiceNum = Math.floor(tempPeoples/3);
+			numArray[numArray.length]=mainRiceNum>5?5:mainRiceNum; // add rice, mainrice nums small then 5
+		}
+		return numArray;
+	}
+
+	function beginChooseDishesAndIndexs(dishNumArray){
+		var resultArray=[];
+		var hasChoosedDishes=[]; // save be choosed dish
+		var hasChoosedIndexs=[]; // save be choosed in sourceArray index
+		var m = getRandom(dishNumArray.length); //random pos start
+		var dishLength=dishNumArray.length;		
+		for(var i=0;i<dishLength;i++){
+			var index = ((i+m)>=dishLength)?i+m-dishLength:(i+m);
+			var dishNum=dishNumArray[index];
+			var tempSingleChoosed = []; // temp singleType choosed array			
+			for(var n=0;n<dishNum;n++){
+				var singleTypeArray = allDishArray[index];
+				var singleTypeIndex = getRandom(singleTypeArray.length);	
+				//alert(tempSingleChoosed+"and"+singleTypeIndex);
+				while(tempSingleChoosed.length <= singleTypeArray.length && checkIfInArray(tempSingleChoosed,singleTypeIndex)){
+					singleTypeIndex = getRandom(singleTypeArray.length);  // if now index is choosed，choose again		
+					//alert("reGet"+singleTypeIndex);
+				}
+				if(tempSingleChoosed.length == singleTypeArray.length){
+					continue; // if singleTypeDish all been choosed, beak this circle,to next type dish
+				}
+				hasChoosedDishes[hasChoosedDishes.length] = singleTypeArray[singleTypeIndex]
+				tempSingleChoosed[tempSingleChoosed.length] = singleTypeIndex; // ramark the temp position
+				hasChoosedIndexs[hasChoosedIndexs.length] = index+","+singleTypeIndex; // ramark the position
+			}
+		} // all dish has choosed 
+		resultArray.push(hasChoosedDishes);
+		resultArray.push(hasChoosedIndexs);		
+		return resultArray;
+	}
+	// when dishes been choosed ,sort it,from big to small
+	function sortChoosedArray(beenChoosedArray){	
+		var hasChoosedDishes=beenChoosedArray[0]; // save be choosed dish
+		var hasChoosedIndexs=beenChoosedArray[1]; // save be choosed in sourceArray index		
+		for(var i=0;i<hasChoosedDishes.length;i++){
+			for(var j=i;j<hasChoosedDishes.length;j++){
+				if(getDishAmount(hasChoosedDishes[i])>getDishAmount(hasChoosedDishes[j])){
+					var temp = hasChoosedDishes[i];
+					hasChoosedDishes[i] = hasChoosedDishes[j];
+					hasChoosedDishes[j] = temp;
+					// also should syn the choosedIndex
+					var temp2 = hasChoosedIndexs[i];
+					hasChoosedIndexs[i] = hasChoosedIndexs[j];
+					hasChoosedIndexs[j] = temp2;
+				}
+			}
+		}
+		//alert(hasChoosedDishes);
+	}
+	// check if over money ,change less cost dish
+	function checkAndChangeDishes(beenChoosedArray,hasPayedMoney,tempSumMoney){	
+			var outRange = moneyLimit?0:outRangeMoney;
+			while((hasPayedMoney+getSumArray(beenChoosedArray[0]))>tempSumMoney+outRange){				
+				if(getRandomRate(8)){
+					changeOneToLessExpensive(beenChoosedArray);// random choose one dish then change it to less expensive
+					sortChoosedArray(beenChoosedArray); // reSort
+				}else{
+					removeDish(beenChoosedArray); // remove the most or least Expensive dish 
+				}
+			}							
+		}
+	function removeDish(beenChoosedArray){
+		var hasChoosedDishes=beenChoosedArray[0]; // save be choosed dish
+		var hasChoosedIndexs=beenChoosedArray[1]; // save be choosed in sourceArray index	
+		hasChoosedDishes.shift();
+		hasChoosedIndexs.shift();
+
+		/*if(getRandomRate(5)){
+			hasChoosedDishes.shift();
+			hasChoosedIndexs.shift();
+		}else{
+			hasChoosedDishes.pop();
+			hasChoosedIndexs.pop();
+		}	 */	
+	}
+	
+	function  changeOneToLessExpensive(beenChoosedArray){
+		var hasChoosedDishes=beenChoosedArray[0]; // save be choosed dish,has been sorted
+		var hasChoosedIndexs=beenChoosedArray[1]; // save be choosed in sourceArray index
+		var dishLength = hasChoosedDishes.length;
+		var allIndex=0;
+		var dishIndex=0;
+		var randomIndex = parseInt(dishLength/2)+getRandom(dishLength/2);
+		var thisChooseDish = hasChoosedDishes[randomIndex];					
+		var choosedIndex = hasChoosedIndexs[randomIndex];					
+		allIndex = parseInt((choosedIndex.split(","))[0]); // which type
+		dishIndex = parseInt((choosedIndex.split(","))[1]); // special type ,the position	
+		var changeDishIndex = getRandom(dishIndex); // get the index small then dishIndex
+		var reChooseCount=0;
+		if(0 == dishIndex){
+			return ; // the dish is the less ,return
+		}
+		var counts=0;
+		while((++counts)>allDishArray[allIndex].length && checkIfInArray(hasChoosedDishes,allDishArray[allIndex][changeDishIndex])){
+			changeDishIndex = getRandom(dishIndex);			
+		}
+		if(checkIfInArray(hasChoosedDishes,allDishArray[allIndex][changeDishIndex])){
+			return; // if beed choosed still in ,return
+		}
+		hasChoosedDishes[randomIndex] = allDishArray[allIndex][changeDishIndex]; // change the mose expensive dish
+		hasChoosedIndexs[randomIndex] = allIndex+","+changeDishIndex; // ramark the position						
+	}
+
+	function randomChooseDish(peoples,money){
+		var tempPeoples=parseInt(peoples);
+		var tempSumMoney= (""==money)?tempPeoples*parseInt(defaultAveragePayed):parseInt(money);		
+		if(!checkCondition(tempPeoples,tempSumMoney)){
+			return;
+		}
+		var dishNumArray= getDishNumArray(tempPeoples);  //get dishNumArray	
+		
+		var hasPayedMoney=0;	
+		if(eatRiceFlag){
+			// eat rice,reduce the rice money
+			hasPayedMoney = eachRicePayed*tempPeoples;
+		}	
+
+		var beenChoosedArray = beginChooseDishesAndIndexs(dishNumArray);
+		
+		sortChoosedArray(beenChoosedArray);
+		// when dishes are been choosed ,should check
+		checkAndChangeDishes(beenChoosedArray,hasPayedMoney,tempSumMoney);	
+		
+		// show result
+		showChooseResult(beenChoosedArray,hasPayedMoney,tempPeoples);		
+	}
+	// show the choose result
+	function showChooseResult(beenChoosedArray,hasPayedMoney,tempPeoples){
+		var hasChoosedDishes=beenChoosedArray[0]; // save be choosed dish
+		var hasChoosedIndexs=beenChoosedArray[1]; // save be choosed in sourceArray index
+		var tempcoldMes="凉菜:",
+            tempVegeMes="蔬菜:",
+            tempMeatMes="荤菜:",
+            tempSoupMes="汤:",
+            tempRiceMes="主食:";
+		for(var i in hasChoosedDishes){
+			var choosedIndex = hasChoosedIndexs[i];
+			var thisChoosedDish = hasChoosedDishes[i];
+			var thisDishArray = thisChoosedDish.split("@");
+			var allDishArrayIndex = (choosedIndex.split(","))[0];
+			switch (allDishArrayIndex){
+				case "0":tempMeatMes += thisDishArray[0]+":"+thisDishArray[1]+",";break;
+				case "1":tempVegeMes += thisDishArray[0]+":"+thisDishArray[1]+",";break;
+				case "2":tempcoldMes += thisDishArray[0]+":"+thisDishArray[1]+",";break;
+				case "3":tempSoupMes += thisDishArray[0]+":"+thisDishArray[1]+",";break;
+				case "4":tempRiceMes += thisDishArray[0]+":"+thisDishArray[1]+",";break;
+				default:break;
+			}
+			hasPayedMoney += parseInt(thisDishArray[1]);
+		}
+		var resultMessage="";
+		if(tempcoldMes.length>3){
+			resultMessage += tempcoldMes.slice(0,-1)+"\n\n";
+		}
+		if(tempVegeMes.length>3){
+			resultMessage += tempVegeMes.slice(0,-1)+"\n\n";
+		}
+		if(tempMeatMes.length>3){
+			resultMessage += tempMeatMes.slice(0,-1)+"\n\n";
+		}
+		if(tempSoupMes.length>2){
+			resultMessage += tempSoupMes.slice(0,-1)+"\n\n";
+		}
+		if(tempRiceMes.length>3){
+			resultMessage += tempRiceMes.slice(0,-1)+"\n\n";
+		}else if(eatRiceFlag){
+			resultMessage += "主食:"+tempPeoples+"碗米饭("+eachRicePayed+"元/碗)"+"\n\n";
+		}
+		resultMessage += "共花费"+hasPayedMoney+"元"+"\n";
+
+		resultMes.innerText = resultMessage;
+	}
+	
+	function checkIfInArray(array,value){
+		for(var i in array){
+			if(array[i] == value){
+				return true;
+			}
+		}
+		return false;
+	}
+    function getRandomRate(rateNum){
+		return  getRandom(10)<rateNum;
+	}
+
+	function getRandom(inNum){
+		return parseInt(Math.random()*inNum);
+	}
+	function sortArray(array){
+		for(var i=0;i<array.length;i++){
+			for(var j=i;j<array.length;j++){
+				if(getDishAmount(array[i])>getDishAmount(array[j])){
+					var temp = array[i];
+					array[i] = array[j];
+					array[j] = temp;
+				}
+			}
+		}
+	}
+	function getDishAmount(dish){
+		return parseInt((dish.split("@"))[1]);
+	}
+	function getSumArray(array){
+		var sum=0;
+		for(var i in array){
+			if(/^\d+$/.test(array[i])){
+				sum+=parseInt(array[i]);
+			}else{
+				sum+=getDishAmount(array[i]);
+			}
+		}
+		return sum;
+	}
+
+	function execute(){
+		var peoples=eatPeoples.value;
+		var money=payMoney.value;		
+		if("" == peoples){			
+			resultMes.innerText = "请输入用餐人数!";
+			return;
+		}
+		if(!/^\d+$/.test(peoples) || (("" != money) && !/^\d+$/.test(money))){		
+			resultMes.innerText = "输入格式不对,请重新输入!";
+			return;
+		}
+		if(""!=money.replace(/[\s]+/g,"")){
+			moneyLimit = true;
+		}
+		randomChooseDish(peoples,money);		
+	}
+  </script>
+<style type="text/css">
+<!--
+body {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	background-color: #FFEAC1;
+}
+.type {
+	font-size: 12px;
+	line-height: 18px;
+}
+.bg {
+background-repeat: no-repeat; 
+background-position: center center;
+}
+-->
+ </style>
+ </head>
+
+ <body>
+ <table width="825" border="0" align="center" cellpadding="0" cellspacing="0" class="type">     
+    <tr>
+      <td height="436" align="center" valign="top" ><table width="625" border="0" align="center" cellpadding="0" cellspacing="0" class="type">
+        <tr>
+          <td height="70" align="center"> 人数：
+            <input type="input" name="eatPeoples" id="eatPeoples" value="" />
+            限定金额
+            <input type="input" name="payMoney" id="payMoney" value="" />
+          <input name="button" type="button" onClick="execute();" value="开始点菜"/></td>
+        </tr>
+        <tr>
+          <td height="180" align="center"><br>
+            <div name="resultMes" id="resultMes" style="font-size:18px" cols="70" rows="15" class="bg"></div>
+          </td>
+        </tr>
+      </table></td>
+    </tr>
+    <tr>
+      <td height="5">&nbsp;</td>
+    </tr>
+    <tr>
+      <td height="50" align="center">copywrite@Dimmacro</td>
+    </tr>
+ </table>
+ </body>
+ <script>
+	 var meatArray=["私家酸菜炖牛腩@38","柴鸡炖宽粉@48","葱香爆羊肚@36","野山椒炒鸭胗@28","鸡腿菇烧海参@38","米椒腊猪嘴@36","叫鸡公@36","花生猪手煲@48","鱼香肝尖@18","虾仁剁椒鸡蛋@20","茶树菇爆牛肚@38","茶树菇爆羊肉@38","茶树菇爆鳝鱼@42","农家小炒香@28","大蒜烧鳝段@68","火爆腰花@28","瓦片腰花@28","回锅肉@22","宫爆鸡丁@18","鱼香肉丝@16","毛血旺@38","水煮牛肉@28","水煮肉片@28","孜然羊肉@35","葱爆羊肉@35","石锅牛肉@36","冬笋肉丝@18","京酱肉丝@20","芥兰牛柳@25","红烧排骨@35","双菇烩牛柳@28","土豆烧牛肉@28","孜然腰丝@18","狮子头(4个)@28","红扒肘子@58","锦绣虾球@48","排骨煨四菌@35","梅菜扣肉@28","焦溜丸子@28","溜肥肠（焦溜）@32","葱烧海参@58","海参过油肉@38","贴饼子黄鱼@38","酸菜鱼@42","家常带鱼@38","红烧草鱼@58","全鱼泡饼（胖头）@58","沸腾青椒鱼@38","椒盐虾@48","干锅密宗带鱼@36","香锅鸭头@38","干锅鱼杂@38","干锅福香肠@28","干锅土家腊肉@38","锅仔柿子炖牛腩@28","干锅肥肠@38","干锅鸭杂@25","铁板鱿鱼须@28","红烧带鱼@28","铁板黑椒牛柳@28","平锅烤羊肉@38","西芹腰果虾仁@48","核桃木耳爆牛柳@32","辣子鸡@38","糖醋里脊@28","锅包肉@35","农家一锅出@38","木须肉@18","刀香蛋背肉@26","红烧鸡块@25","蒜苗肉丝@18","软炸虾仁@32","满堂飘香臭鲈鱼@68","满堂飘香臭草鱼@58","香辣烤草鱼（豆豉）@58","铁板牛腩焖饼@48","麻辣馋嘴蛙@68","铁锅大公鸡@68","明香大虾@58"];
+			
+	var vegeArray=["湘西外婆菜@25","砂煲长豆角@18","香芹炒香干@14","长豆角炒茄子@18","砂煲娃娃菜@18","三鲜日本豆腐@20","鱼香脆皮日本豆腐@20","砂煲扁豆丝@18","八珍豆腐煲@28","干锅蛋香腐竹@22","干锅土豆片@20","干锅四季豆@18","干锅井冈山豆皮@20","干锅手撕包菜@16","酱扒茄子@18","桃仁芹香爆云耳@26","鸡汁豆干炒木耳@13","木耳炒山药@18","荷塘小炒@13","肉沫粉丝小白菜@14","清炒西兰花@15","清炒荷兰豆@15","咸旦黄焗南瓜@18","松仁玉米@20","咸蛋黄玉米粒@20","蒜烧腐竹@15","烧茄子@16","山珍烩丝瓜@18","麻豆腐@15","地三鲜@16","西红柿炒鸡蛋@15","家常豆腐@16","油焖雷笋@18","醋溜木须@25","葱花摊鸡蛋@15","烧二冬@16","肉沫酸豇豆@15"];
+	
+	var coldArray=["醉鱼@18","芥末鸭掌@16","盐水鸭胗@15","酱鸭翅@12","辣鸭脖@12","麻辣鸭头@3","香辣卤大肠@28","五香牛肉@18","蓝莓桂花山药@18","芥末墩@12","香椿苗黑豆丝@12","大拌菜@12","拌苦菊@12","豆酱@13","炸灌肠@13","酸辣蕨根粉@12","爽口笋丝@8","麻酱拉皮@12","夫妻肺片@18","烧椒皮蛋@10","刺身木耳@12","拌羊肚@18","果仁菠菜@12"];
+	
+	var soupArray=["疙瘩汤@12","紫菜蛋花汤@10"];
+	
+	var riceArray=["玉米饼@10","南瓜饼@10","糊塌子@12","韭菜盒子@15","手抓饼@10","葱花饼@10","猪肉大葱水饺@30","猪肉韭菜水饺@30","猪肉茴香水饺@30","三鲜水饺@40","酱油炒饭@10","什锦炒饭@12","腊肉炒饭@18","葱油拌面@12"];	
+
+	sortArray(meatArray);
+	sortArray(vegeArray);
+	sortArray(coldArray);
+	sortArray(soupArray);
+	sortArray(riceArray);
+	var allDishArray = [];
+	allDishArray.push(meatArray);
+	allDishArray.push(vegeArray);
+	allDishArray.push(coldArray);
+	allDishArray.push(soupArray);
+	allDishArray.push(riceArray);
+
+ </script>
+</html>
