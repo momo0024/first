@@ -22,7 +22,7 @@
 			// var xuecolor=rgb($(r),$(g),$(b));
 			var xue=$('<div></div>').css({
 				'position':'absolute',
-			}).html('&#10052');
+			}).html('&#10052;');
 			setInterval(function(){
 				var xuesize=xuemin+Math.random()*xuemax;
 				xue.clone().appendTo($('body')).css({
