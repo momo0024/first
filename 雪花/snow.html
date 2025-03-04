@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 设置canvas尺寸为窗口大小
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 雪花数组
+        const snowflakes = [];
+        const maxFlakes = 200;
+        const snowCharacters = ['❄', '❅', '❆', '❋']; // 不同雪花字符
+
+        // 雪花对象构造函数
+        class Snowflake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = -10;
+                this.size = Math.random() * 10 + 10; // 字体大小10-20px
+                this.char = snowCharacters[Math.floor(Math.random() * snowCharacters.length)];
+                this.color = `hsl(${Math.random() * 360}, ${Math.random() * 50 + 50}%, 90%)`;
+                this.speedY = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.wind = Math.random() * 0.02;
+                this.angle = 0;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.angle) * 2;
+                this.angle += this.wind;
+
+                if (this.y > canvas.height + 10) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = this.color;
+                ctx.fillText(this.char, this.x, this.y);
+            }
+        }
+
+        // 创建雪花
+        function createSnowflakes() {
+            for (let i = 0; i < maxFlakes; i++) {
+                snowflakes.push(new Snowflake());
+                snowflakes[i].y = Math.random() * canvas.height;
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            snowflakes.forEach(snowflake => {
+                snowflake.update();
+                snowflake.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // 初始化
+        createSnowflakes();
+        animate();
+    </script>
+</body>
+</html>
